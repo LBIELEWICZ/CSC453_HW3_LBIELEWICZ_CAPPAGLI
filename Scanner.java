@@ -77,6 +77,13 @@ public class Scanner{
       String id = "";
       id += tokChar;
       itr++;
+      
+      if (itr >= stream.length() || !((stream.charAt(itr) >= '0' && stream.charAt(itr) <= '9') ||
+         (stream.charAt(itr) >= 'a' && stream.charAt(itr) <= 'z') ||
+         (stream.charAt(itr) >= 'A' && stream.charAt(itr) <= 'Z'))) {
+        System.out.println("ERROR: Invalid ID, exiting program.");
+        System.exit(1);
+      }
 
       while (itr < stream.length() && ((stream.charAt(itr) >= '0' && stream.charAt(itr) <= '9') ||
              (stream.charAt(itr) >= 'a' && stream.charAt(itr) <= 'z') ||

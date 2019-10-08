@@ -11,6 +11,110 @@ public class EvalParser {
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
   //                    build the threeAddressResult string with your three address translation 
   /****************************************/
+  public ASTNode threeAddrS(LinkedList<Token> tokens) {
+    ASTNode left = threeAddrG(tokens); // Left tempID for operation three address generation
+    ASTNode currNode = left; 
+    while (true) {
+      // Handle equality operations
+      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.EQ){
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("==");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrG(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        // Used to keep the original value intact for returns
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      // Handle inequality operations
+      else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.NEQ) {
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("!=");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrG(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      else {
+        break;
+      }
+    }
+    return currNode;
+  }
+
+  public ASTNode threeAddrG(LinkedList<Token> tokens) {
+    ASTNode left = threeAddrE(tokens); // Left tempID for operation three address generation
+    ASTNode currNode = left; 
+    while (true) {
+      // Handle less than operations
+      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LT){
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("<");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrE(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        // Used to keep the original value intact for returns
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      // Handle greater than operations
+      else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GT){
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal(">");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrE(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        // Used to keep the original value intact for returns
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      // Handle less than or equal to operations
+      else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LTE){
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("<=");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrE(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        // Used to keep the original value intact for returns
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      // Handle greater than or equal to operations
+      else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GTE) {
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal(">=");
+        op.setLeft(left);
+        tokens.remove();
+        ASTNode right = threeAddrE(tokens);
+        op.setRight(right);
+        op.setID(tempID);
+        tempID++;
+        currNode = op;
+        left = currNode;
+      }
+      else {
+        break;
+      }
+    }
+    return currNode;
+  }
+
   public ASTNode threeAddrE(LinkedList<Token> tokens) {
     ASTNode left = threeAddrT(tokens); // Left tempID for operation three address generation
     ASTNode currNode = left; 
@@ -203,7 +307,7 @@ public class EvalParser {
     this.tempID = 0;
     LinkedList<Token> tokens = scan.extractTokenList(eval);
     
-    return postorder(threeAddrE(tokens), "");
+    return postorder(threeAddrS(tokens), "");
   }
 
   private String postorder(ASTNode root, String str) {

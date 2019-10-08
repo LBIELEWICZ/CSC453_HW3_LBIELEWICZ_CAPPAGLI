@@ -94,6 +94,9 @@ public class EvalParser {
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
       currNode = threeAddrCf(tokens);
     }
+    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
+      return null;
+    }
     else {
       // Invalid statment
       System.out.println("ERROR: Invalid statment");
@@ -452,7 +455,7 @@ public class EvalParser {
     this.tempID = 0;
     LinkedList<Token> tokens = scan.extractTokenList(eval);
     
-    return postorder(threeAddrS(tokens), "");
+    return postorder(threeAddrProg(tokens), "");
   }
 
   private String postorder(ASTNode root, String str) {
@@ -466,8 +469,11 @@ public class EvalParser {
       str += "temp" + root.getID() + " = temp" + root.getLeft().getID() +
              " " + root.getVal() + " temp" + root.getRight().getID() + "\n";
     }
-    else {
+    else if (root.getType() == ASTNode.NodeType.NUM) {
       str += "temp" + root.getID() + " = " + root.getVal() + "\n";
+    }
+    else if (root.getType() == ASTNode.NodeType.ASSG) {
+      str += root.getLeft().getVal() + " = temp" + root.getRight().getID() + "\n";
     }
     return str;
   }

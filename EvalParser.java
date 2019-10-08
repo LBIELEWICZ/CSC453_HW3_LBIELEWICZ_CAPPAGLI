@@ -7,6 +7,8 @@ public class EvalParser {
 
   int tempID = 0;
 
+  Token.TokenType last;
+
   /***************** Three Address Translator ***********************/
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
   //                    build the threeAddressResult string with your three address translation 
@@ -98,7 +100,55 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrCf(LinkedList<Token> tokens) {
-    //TODO
+    if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
+      ASTNode cf = new ASTNode(ASTNode.NodeType.IF);
+      tokens.remove();
+    }
+    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.WHILE){
+      ASTNode cf = new ASTNode(ASTNode.NodeType.WHILE);
+      tokens.remove();
+    }
+    else {
+      // Invalid control flow
+      System.out.println("ERROR: Invalid control flow");
+      System.exit(1);
+    }
+    if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
+      tokens.remove();
+      cf.setLeft(threeAddrE(tokens));
+      cf.setVal(last);
+      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CP) {
+        tokens.remove();
+        if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OB) {
+          tokens.remove();
+          cf.setRight(threeAddrE(tokens));
+          currNode = cf;
+          if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
+            tokens.remove();
+          }
+          else {
+            // Invalid control flow
+            System.out.println("ERROR: Invalid control flow");
+            System.exit(1);
+          }
+        }
+        else {
+          // Invalid control flow
+          System.out.println("ERROR: Invalid control flow");
+          System.exit(1);
+        }
+      }
+      else {
+        // Invalid control flow
+        System.out.println("ERROR: Invalid control flow");
+        System.exit(1);
+      }
+    }
+    else {
+      // Invalid control flow
+      System.out.println("ERROR: Invalid control flow");
+      System.exit(1);
+    }
     return currNode;
   }
 
@@ -145,6 +195,7 @@ public class EvalParser {
     while (true) {
       // Handle equality operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.EQ){
+        last = Token.TokenType.EQ;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal("==");
         op.setLeft(left);
@@ -159,6 +210,7 @@ public class EvalParser {
       }
       // Handle inequality operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.NEQ) {
+        last = Token.TokenType.NEQ;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal("!=");
         op.setLeft(left);
@@ -183,6 +235,7 @@ public class EvalParser {
     while (true) {
       // Handle less than operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LT){
+        last = Token.TokenType.LT;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal("<");
         op.setLeft(left);
@@ -197,6 +250,7 @@ public class EvalParser {
       }
       // Handle greater than operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GT){
+        last = Token.TokenType.GT;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal(">");
         op.setLeft(left);
@@ -211,6 +265,7 @@ public class EvalParser {
       }
       // Handle less than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LTE){
+        last = Token.TokenType.LTE;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal("<=");
         op.setLeft(left);
@@ -225,6 +280,7 @@ public class EvalParser {
       }
       // Handle greater than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GTE) {
+        last = Token.TokenType.GTE;
         ASTNode op = new ASTNode(ASTNode.NodeType.OP);
         op.setVal(">=");
         op.setLeft(left);
@@ -323,10 +379,6 @@ public class EvalParser {
     // Handle recursion into expressions contained in parentheses
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
       tokens.remove();
-      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CP) {
-        System.out.println("ERROR: Expression not supported by grammar");
-        System.exit(1);
-      }
       currNode = threeAddrE(tokens);
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CP) {
         tokens.remove();

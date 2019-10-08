@@ -1,14 +1,14 @@
 public class ASTNode {
 	
 	public enum NodeType {
-		OP, NUM, ID, ASSG, LIST, PROG;
+		OP, NUM, ID, IF, WHILE, ASSG, LIST, PROG;
 	}
 	
 	private ASTNode left = null;
 	private ASTNode right = null;
 	private String val = null;
 	private NodeType type;
-        private int id;
+    private int id;
 
 	public ASTNode(ASTNode.NodeType type) {
 		this.type = type;

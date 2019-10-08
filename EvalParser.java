@@ -6,6 +6,9 @@ public class EvalParser {
   Scanner scan = new Scanner();
 
   int tempID = 0;
+  int tlabelID = 0; // Label id for true
+  int flabelID = 0; // Label id for false
+  int rlabelID = 0; // Label id for loops
 
   /***************** Three Address Translator ***********************/
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and

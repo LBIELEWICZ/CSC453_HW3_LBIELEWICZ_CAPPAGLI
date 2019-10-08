@@ -11,6 +11,45 @@ public class EvalParser {
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
   //                    build the threeAddressResult string with your three address translation 
   /****************************************/
+  public ASTNode threeAddrStmtLst(LinkedList<Token> tokens) {
+    ASTNode left = threeAddrStmt(tokens);
+    ASTNode currNode = left;
+    while(true) {
+      if (tokens.peek() != null && (tokens.peek().tokenType == Token.TokenType.INT || tokens.peek().tokenType == Token.TokenType.IF)){
+        ASTNode list = new ASTNode(ASTNode.NodeType.LIST);
+        list.setLeft(left);
+        ASTNode right = threeAddrStmt(tokens);
+        list.setRight(right);
+        currNode = list;
+        left = currNode;
+      }
+      else {
+        break;
+      }
+    }
+    return currNode;
+  }
+
+  public ASTNode threeAddrStmt(LinkedList<Token> tokens) {
+    if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
+      currNode = threeAddrAssignment(tokens);
+    }
+    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
+      currNode = threeAddrCf(tokens);
+    }
+    else {
+      // Invalid statment
+      System.out.println("ERROR: Invalid statment");
+      System.exit(1);
+    }
+    return currNode;
+  }
+
+  public ASTNode threeAddrCf(LinkedList<Token> tokens) {
+    //TODO
+    return currNode;
+  }
+
   public ASTNode threeAddrAssignment(LinkedList<Token> tokens) {
     ASTNode op = new ASTNode(ASTNode.NodeType.ASSG);
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
@@ -29,9 +68,6 @@ public class EvalParser {
       tokens.remove();
       ASTNode right = threeAddrS(tokens);
       op.setRight(right);
-      op.setID(tempID);
-      // Used to keep the original value intact for returns
-      tempID++;
       currNode = op;
       left = currNode;
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.END){

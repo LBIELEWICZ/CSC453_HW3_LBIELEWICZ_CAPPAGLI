@@ -11,6 +11,46 @@ public class EvalParser {
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
   //                    build the threeAddressResult string with your three address translation 
   /****************************************/
+  public ASTNode threeAddrAssignment(LinkedList<Token> tokens) {
+    ASTNode op = new ASTNode(ASTNode.NodeType.ASSG);
+    if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
+      tokens.remove();
+    }
+    else {
+      // Invalid assignment
+      System.out.println("ERROR: Invalid assignment");
+      System.exit(1);
+    }
+    ASTNode left = threeAddrId(tokens); // Left tempID for operation three address generation
+    ASTNode currNode = left; 
+    if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.ASSG){
+      op.setVal("=");
+      op.setLeft(left);
+      tokens.remove();
+      ASTNode right = threeAddrS(tokens);
+      op.setRight(right);
+      op.setID(tempID);
+      // Used to keep the original value intact for returns
+      tempID++;
+      currNode = op;
+      left = currNode;
+      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.END){
+        tokens.remove();
+      }
+      else {
+        // Invalid assignment
+        System.out.println("ERROR: Invalid assignment");
+        System.exit(1);
+      }
+    }
+    else {
+      // Invalid assignment
+      System.out.println("ERROR: Invalid assignment");
+      System.exit(1);
+    }
+    return currNode;
+  }
+
   public ASTNode threeAddrS(LinkedList<Token> tokens) {
     ASTNode left = threeAddrG(tokens); // Left tempID for operation three address generation
     ASTNode currNode = left; 
@@ -216,10 +256,6 @@ public class EvalParser {
       currNode.setID(tempID);
       this.tempID++;
       tokens.remove();
-      if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
-        System.out.println("ERROR: Expression not supported by grammar");
-        System.exit(1);
-      }
     }
     else {
       // If a factor has reached this point it is not an operation supported by this parser
@@ -227,6 +263,11 @@ public class EvalParser {
       System.exit(1);
     } 
     
+    return currNode;
+  }
+
+  public ASTNode threeAddrId(LinkedList<Token> tokens) {
+    // TODO
     return currNode;
   }
 

@@ -72,7 +72,8 @@ public class EvalParser {
     ASTNode left = threeAddrStmt(tokens);
     ASTNode currNode = left;
     while(true) {
-      if (tokens.peek() != null && (tokens.peek().tokenType == Token.TokenType.INT || tokens.peek().tokenType == Token.TokenType.IF)){
+      if (tokens.peek() != null && (tokens.peek().tokenType == Token.TokenType.INT || 
+          tokens.peek().tokenType == Token.TokenType.IF || tokens.peek().tokenType == Token.TokenType.WHILE)){
         ASTNode list = new ASTNode(ASTNode.NodeType.LIST);
         list.setLeft(left);
         ASTNode right = threeAddrStmt(tokens);
@@ -92,9 +93,12 @@ public class EvalParser {
 
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
       currNode = threeAddrAssignment(tokens);
+      this.tempID = 0;
     }
-    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
+    else if (tokens.peek() != null && (tokens.peek().tokenType == Token.TokenType.IF || 
+                                       tokens.peek().tokenType == Token.TokenType.WHILE)){
       currNode = threeAddrCf(tokens);
+      this.tempID = 0;
     }
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
       return null;
@@ -109,12 +113,13 @@ public class EvalParser {
 
   public ASTNode threeAddrCf(LinkedList<Token> tokens) {
     ASTNode currNode = null;
+    ASTNode cf = null;
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
-      ASTNode cf = new ASTNode(ASTNode.NodeType.IF);
+      cf = new ASTNode(ASTNode.NodeType.IF);
       tokens.remove();
     }
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.WHILE){
-      ASTNode cf = new ASTNode(ASTNode.NodeType.WHILE);
+      cf = new ASTNode(ASTNode.NodeType.WHILE);
       tokens.remove();
     }
     else {
@@ -124,13 +129,17 @@ public class EvalParser {
     }
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
       tokens.remove();
-      cf.setLeft(threeAddrE(tokens));
-      cf.setVal(last);
+      
+      cf.setLeft(threeAddrS(tokens));
+      this.tempID = 0;
+      cf.setVal("" + last);
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CP) {
+        
         tokens.remove();
         if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OB) {
           tokens.remove();
-          cf.setRight(threeAddrE(tokens));
+          cf.setRight(threeAddrStmtLst(tokens));
+          cf.setID(cf.getLeft().getID());
           currNode = cf;
           if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
             tokens.remove();
@@ -205,36 +214,43 @@ public class EvalParser {
       // Handle equality operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.EQ){
         last = Token.TokenType.EQ;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal("==");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrG(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         // Used to keep the original value intact for returns
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       // Handle inequality operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.NEQ) {
         last = Token.TokenType.NEQ;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal("!=");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrG(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       else {
         break;
       }
-    }
+    }    
+
     return currNode;
   }
 
@@ -245,61 +261,73 @@ public class EvalParser {
       // Handle less than operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LT){
         last = Token.TokenType.LT;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal("<");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrE(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         // Used to keep the original value intact for returns
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       // Handle greater than operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GT){
         last = Token.TokenType.GT;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal(">");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrE(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         // Used to keep the original value intact for returns
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       // Handle less than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LTE){
         last = Token.TokenType.LTE;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal("<=");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrE(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         // Used to keep the original value intact for returns
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       // Handle greater than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GTE) {
         last = Token.TokenType.GTE;
-        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        ASTNode op = new ASTNode(ASTNode.NodeType.RELOP);
         op.setVal(">=");
         op.setLeft(left);
         tokens.remove();
         ASTNode right = threeAddrE(tokens);
         op.setRight(right);
-        op.setID(tempID);
+        op.setID(this.tlabelID);
         tempID++;
         currNode = op;
         left = currNode;
+        this.tlabelID++;
+        this.flabelID++;
+        this.rlabelID++;
       }
       else {
         break;
@@ -403,6 +431,7 @@ public class EvalParser {
       currNode = new ASTNode(ASTNode.NodeType.NUM);
       currNode.setVal("" + tokens.peek().tokenVal);
       currNode.setID(tempID);
+      
       this.tempID++;
       tokens.remove();
     }
@@ -514,8 +543,41 @@ public class EvalParser {
     if (root == null) {
       return str;
     }
-    
+
+    if (root.getType() == ASTNode.NodeType.WHILE) {
+      str += "repeatLabel" + root.getID() + "\n";
+    }
+
     str = postorder(root.getLeft(), str);
+    if (root.getType() == ASTNode.NodeType.IF || root.getType() == ASTNode.NodeType.WHILE) {
+      if (root.getLeft().getVal().equals("<")) {
+        str += "IF_LT: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      else if (root.getLeft().getVal().equals(">")) {
+        str += "IF_GT: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      else if (root.getLeft().getVal().equals("<=")) {
+        str += "IF_LTE: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      else if (root.getLeft().getVal().equals(">=")) {
+        str += "IF_GTE: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      else if (root.getLeft().getVal().equals("==")) {
+        str += "IF_EQ: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      else if (root.getLeft().getVal().equals("!=")) {
+        str += "IF_NE: temp" + root.getLeft().getLeft().getID() + ", temp" +
+               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+      }
+      str += "GOTO: falseLabel" + root.getID() + "\n";
+      str += "trueLabel" + root.getID() + "\n";
+    }
+
     str = postorder(root.getRight(), str);
     if (root.getType() == ASTNode.NodeType.OP) {
       str += "temp" + root.getID() + " = temp" + root.getLeft().getID() +
@@ -526,6 +588,13 @@ public class EvalParser {
     }
     else if (root.getType() == ASTNode.NodeType.ASSG) {
       str += root.getLeft().getVal() + " = temp" + root.getRight().getID() + "\n";
+    }
+    else if (root.getType() == ASTNode.NodeType.IF) {
+      str += "falseLabel" + root.getID() + "\n";
+    }
+    else if (root.getType() == ASTNode.NodeType.WHILE) {
+      str += "GOTO: repeatLabel" + root.getID() + "\n";
+      str += "falseLabel" + root.getID() + "\n";
     }
     return str;
   }

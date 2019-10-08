@@ -6,6 +6,9 @@ public class EvalParser {
   Scanner scan = new Scanner();
 
   int tempID = 0;
+  int tlabelID = 0; // Label id for true
+  int flabelID = 0; // Label id for false
+  int rlabelID = 0; // Label id for loops
 
   Token.TokenType last;
 
@@ -85,11 +88,16 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrStmt(LinkedList<Token> tokens) {
+    ASTNode currNode = null;
+
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
       currNode = threeAddrAssignment(tokens);
     }
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
       currNode = threeAddrCf(tokens);
+    }
+    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
+      return null;
     }
     else {
       // Invalid statment
@@ -100,6 +108,7 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrCf(LinkedList<Token> tokens) {
+    ASTNode currNode = null;
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
       ASTNode cf = new ASTNode(ASTNode.NodeType.IF);
       tokens.remove();
@@ -407,8 +416,18 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrId(LinkedList<Token> tokens) {
-    // TODO
-    return currNode;
+    ASTNode id = new ASTNode(ASTNode.NodeType.ID);
+    
+    // Create a node that holds the name of the ID
+    if (tokens.peek().tokenType == Token.TokenType.ID) {
+      id.setVal(tokens.peek().tokenVal);
+      tokens.remove();
+    }
+    else {
+      System.out.println("ERROR: Invalid assignment");
+      System.exit(1);
+    }
+    return id;
   }
 
   /***************** Simple Expression Evaluator ***********************/
@@ -488,7 +507,7 @@ public class EvalParser {
     this.tempID = 0;
     LinkedList<Token> tokens = scan.extractTokenList(eval);
     
-    return postorder(threeAddrS(tokens), "");
+    return postorder(threeAddrProg(tokens), "");
   }
 
   private String postorder(ASTNode root, String str) {
@@ -502,8 +521,11 @@ public class EvalParser {
       str += "temp" + root.getID() + " = temp" + root.getLeft().getID() +
              " " + root.getVal() + " temp" + root.getRight().getID() + "\n";
     }
-    else {
+    else if (root.getType() == ASTNode.NodeType.NUM) {
       str += "temp" + root.getID() + " = " + root.getVal() + "\n";
+    }
+    else if (root.getType() == ASTNode.NodeType.ASSG) {
+      str += root.getLeft().getVal() + " = temp" + root.getRight().getID() + "\n";
     }
     return str;
   }

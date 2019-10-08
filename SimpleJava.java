@@ -1,16 +1,12 @@
 import java.util.*;
 import java.lang.String;
 
-public class SimpleJava {
-
-  Scanner scan;
-  int tempID = 0;
-  int tlabelID = 0; // Label id for true
-  int flabelID = 0; // Label id for false
-  int rlabelID = 0; // Label id for loops
+public class SimpleJava { 
 
   public String getThreeAddr(String eval){
-    return "";
+    EvalParser parser = new EvalParser();
+    
+    return parser.getThreeAddr(eval);
   } 
 
   public static void main(String[] args){

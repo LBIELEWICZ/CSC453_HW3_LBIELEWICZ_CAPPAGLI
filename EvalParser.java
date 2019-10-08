@@ -6,8 +6,6 @@ public class EvalParser {
   Scanner scan = new Scanner();
 
   int tempID = 0;
-  String threeAddressResult = "";
-  ASTNode treeRoot = null;
 
   /***************** Three Address Translator ***********************/
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
@@ -202,7 +200,6 @@ public class EvalParser {
 
   /* TODO #2: Now add three address translation to your parser*/
   public String getThreeAddr(String eval){
-    this.threeAddressResult = "";
     this.tempID = 0;
     LinkedList<Token> tokens = scan.extractTokenList(eval);
     

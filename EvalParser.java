@@ -83,6 +83,8 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrStmt(LinkedList<Token> tokens) {
+    ASTNode currNode = null;
+
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.INT){
       currNode = threeAddrAssignment(tokens);
     }
@@ -98,7 +100,8 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrCf(LinkedList<Token> tokens) {
-    //TODO
+    ASTNode currNode = null;
+
     return currNode;
   }
 
@@ -355,8 +358,18 @@ public class EvalParser {
   }
 
   public ASTNode threeAddrId(LinkedList<Token> tokens) {
-    // TODO
-    return currNode;
+    ASTNode id = new ASTNode(ASTNode.NodeType.ID);
+    
+    // Create a node that holds the name of the ID
+    if (tokens.peek().tokenType == Token.TokenType.ID) {
+      id.setVal(tokens.peek().tokenVal);
+      tokens.remove();
+    }
+    else {
+      System.out.println("ERROR: Invalid assignment");
+      System.exit(1);
+    }
+    return id;
   }
 
   /***************** Simple Expression Evaluator ***********************/

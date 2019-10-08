@@ -52,28 +52,29 @@ public class SimpleJavaTest{
     SimpleJava parser = new SimpleJava();
 
      // Test from piazza
-    eval = "main(){int x = 3; int y = 3 + x;}";
-    result = "temp0 = 3\n"+
+    String eval = "void main(){int x = 3; int y = 3 + x;}";
+    String result = "temp0 = 3\n"+
              "x = temp0\n"+
              "temp0 = 3\n"+
              "temp1 = temp0 + x\n"+
              "y = temp1\n";
     assert(parser.getThreeAddr(eval).equals(result));
+    System.out.println("PASSED");
 
     // Another test from piazza
-    eval = "main(){int x = 3; int y = x;}";
+    eval = "void main(){int x = 3; int y = x;}";
     result = "temp0 = 3\n"+
              "x = temp0\n"+
              "y = x\n";
     assert(parser.getThreeAddr(eval).equals(result));
 
     //example from spec
-    String eval = "void blarg() {\n" +
+    eval = "void blarg() {\n" +
                     "\tif(2 + 3 - 2 < 2){\n" +
                     "\t\tint x = 9+(2*2);\n" +
                     "\t}\n" +
                     "}\n";
-    String result = "temp0 = 2\n" +
+    result = "temp0 = 2\n" +
                     "temp1 = 3\n" +
                     "temp2 = temp0 + temp1\n" +
                     "temp3 = 2\n" +
@@ -150,7 +151,7 @@ public class SimpleJavaTest{
              "trueLabel1\n"+
              "temp0 = 3\n"+
              "y = temp0\n"+
-             "falseLabel1\n";//
+             "falseLabel1\n"+
              "repeatLabel1\n"+
              "temp0 = 3\n"+
              "temp1 = 2\n"+

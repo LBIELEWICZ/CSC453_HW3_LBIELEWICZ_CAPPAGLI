@@ -59,7 +59,6 @@ public class SimpleJavaTest{
              "temp1 = temp0 + x\n"+
              "y = temp1\n";
     assert(parser.getThreeAddr(eval).equals(result));
-    System.out.println("PASSED");
 
     // Another test from piazza
     eval = "void main(){int x = 3; int y = x;}";
@@ -126,7 +125,7 @@ public class SimpleJavaTest{
              "IF_NQ: temp0, temp1, trueLabel1\n"+
              "GOTO: falseLabel1\n"+
              "trueLabel1\n"+
-             "temp0 = 4\n"+
+             "temp0 = 7\n"+
              "x = temp0\n"+
              "GOTO: repeatLabel1\n"+
              "falseLabel1\n";
@@ -158,7 +157,7 @@ public class SimpleJavaTest{
              "IF_NQ: temp0, temp1, trueLabel2\n"+
              "GOTO: falseLabel2\n"+
              "trueLabel2\n"+
-             "temp0 = 4\n"+
+             "temp0 = 7\n"+
              "x = temp0\n"+
              "GOTO: repeatLabel1\n"+
              "falseLabel2\n";

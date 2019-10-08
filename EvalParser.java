@@ -114,12 +114,15 @@ public class EvalParser {
   public ASTNode threeAddrCf(LinkedList<Token> tokens) {
     ASTNode currNode = null;
     ASTNode cf = null;
+    boolean whileFlag = false;    
+
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.IF){
       cf = new ASTNode(ASTNode.NodeType.IF);
       tokens.remove();
     }
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.WHILE){
       cf = new ASTNode(ASTNode.NodeType.WHILE);
+      whileFlag = true;
       tokens.remove();
     }
     else {
@@ -140,6 +143,11 @@ public class EvalParser {
           tokens.remove();
           cf.setRight(threeAddrStmtLst(tokens));
           cf.setID(cf.getLeft().getID());
+          
+          if (whileFlag) {
+	    cf.setRID(this.rlabelID);
+            this.rlabelID++;
+          }
           currNode = cf;
           if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
             tokens.remove();
@@ -227,7 +235,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       // Handle inequality operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.NEQ) {
@@ -244,7 +251,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       else {
         break;
@@ -274,7 +280,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       // Handle greater than operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GT){
@@ -292,7 +297,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       // Handle less than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.LTE){
@@ -310,7 +314,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       // Handle greater than or equal to operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.GTE) {
@@ -327,7 +330,6 @@ public class EvalParser {
         left = currNode;
         this.tlabelID++;
         this.flabelID++;
-        this.rlabelID++;
       }
       else {
         break;
@@ -433,6 +435,13 @@ public class EvalParser {
       currNode.setID(tempID);
       
       this.tempID++;
+      tokens.remove();
+    }
+    else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.ID) {
+      currNode = new ASTNode(ASTNode.NodeType.ID);
+      currNode.setVal(tokens.peek().tokenVal);
+      currNode.setID(tempID);
+ 
       tokens.remove();
     }
     else {
@@ -545,7 +554,7 @@ public class EvalParser {
     }
 
     if (root.getType() == ASTNode.NodeType.WHILE) {
-      str += "repeatLabel" + root.getID() + "\n";
+      str += "repeatLabel" + root.getRID() + "\n";
     }
 
     str = postorder(root.getLeft(), str);
@@ -571,7 +580,7 @@ public class EvalParser {
                root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
       }
       else if (root.getLeft().getVal().equals("!=")) {
-        str += "IF_NE: temp" + root.getLeft().getLeft().getID() + ", temp" +
+        str += "IF_NQ: temp" + root.getLeft().getLeft().getID() + ", temp" +
                root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
       }
       str += "GOTO: falseLabel" + root.getID() + "\n";
@@ -580,20 +589,31 @@ public class EvalParser {
 
     str = postorder(root.getRight(), str);
     if (root.getType() == ASTNode.NodeType.OP) {
-      str += "temp" + root.getID() + " = temp" + root.getLeft().getID() +
-             " " + root.getVal() + " temp" + root.getRight().getID() + "\n";
+      str += "temp" + root.getID() + " = ";
+      if (root.getLeft().getType() == ASTNode.NodeType.ID)
+        str += root.getLeft().getVal();
+      else
+        str += "temp" + root.getLeft().getID();
+      str += " " + root.getVal() + " ";
+      if (root.getRight().getType() == ASTNode.NodeType.ID)
+        str += root.getRight().getVal() + "\n";
+      else
+        str += "temp" + root.getRight().getID() + "\n";
     }
     else if (root.getType() == ASTNode.NodeType.NUM) {
       str += "temp" + root.getID() + " = " + root.getVal() + "\n";
     }
     else if (root.getType() == ASTNode.NodeType.ASSG) {
-      str += root.getLeft().getVal() + " = temp" + root.getRight().getID() + "\n";
+      if (root.getRight().getType() == ASTNode.NodeType.ID)
+        str += root.getLeft().getVal() + " = " + root.getRight().getVal() + "\n";
+      else
+        str += root.getLeft().getVal() + " = temp" + root.getRight().getID() + "\n";
     }
     else if (root.getType() == ASTNode.NodeType.IF) {
       str += "falseLabel" + root.getID() + "\n";
     }
     else if (root.getType() == ASTNode.NodeType.WHILE) {
-      str += "GOTO: repeatLabel" + root.getID() + "\n";
+      str += "GOTO: repeatLabel" + root.getRID() + "\n";
       str += "falseLabel" + root.getID() + "\n";
     }
     return str;

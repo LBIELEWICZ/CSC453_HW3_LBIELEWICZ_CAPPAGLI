@@ -51,6 +51,22 @@ public class SimpleJavaTest{
     System.out.println("More Testing Three Address Generation");
     SimpleJava parser = new SimpleJava();
 
+     // Test from piazza
+    eval = "main(){int x = 3; int y = 3 + x;}";
+    result = "temp0 = 3\n"+
+             "x = temp0\n"+
+             "temp0 = 3\n"+
+             "temp1 = temp0 + x\n"+
+             "y = temp1\n";
+    assert(parser.getThreeAddr(eval).equals(result));
+
+    // Another test from piazza
+    eval = "main(){int x = 3; int y = x;}";
+    result = "temp0 = 3\n"+
+             "x = temp0\n"+
+             "y = x\n";
+    assert(parser.getThreeAddr(eval).equals(result));
+
     //example from spec
     String eval = "void blarg() {\n" +
                     "\tif(2 + 3 - 2 < 2){\n" +
@@ -108,27 +124,43 @@ public class SimpleJavaTest{
              "temp1 = 2\n"+
              "IF_NQ: temp0, temp1, trueLabel1\n"+
              "GOTO: falseLabel1\n"+
-             "trueLabel0\n"+
+             "trueLabel1\n"+
              "temp0 = 4\n"+
              "x = temp0\n"+
              "GOTO: repeatLabel1\n"+
              "falseLabel1\n";
     assert(parser.getThreeAddr(eval).equals(result));
 
-    // Test from piazza
-    eval = "main(){int x = 3; int y = 3 + x;}";
-    result = "temp0 = 3\n"+
-             "x = temp0\n"+
+    // Testing independice of lables
+    eval = "void main() { while(3 <= 2) { int x = 4;} if(3 > 6) { int y = 3; } while(3 != 2) { int x = 7;} }";
+    result = "repeatLabel0\n"+
              "temp0 = 3\n"+
-             "temp1 = temp0 + x\n"+
-             "y = temp1\n";
-    assert(parser.getThreeAddr(eval).equals(result));
-
-    // Another test from piazza
-    eval = "main(){int x = 3; int y = x;}";
-    result = "temp0 = 3\n"+
+             "temp1 = 2\n"+
+             "IF_LTE: temp0, temp1, trueLabel0\n"+
+             "GOTO: falseLabel0\n"+
+             "trueLabel0\n"+
+             "temp0 = 4\n"+
              "x = temp0\n"+
-             "y = x\n";
+             "GOTO: repeatLabel0\n"+
+             "falseLabel0\n"+
+             "temp0 = 3\n"+
+             "temp1 = 6\n"+
+             "IF_GT: temp0, temp1, trueLabel1\n"+
+             "GOTO: falseLabel1\n"+
+             "trueLabel1\n"+
+             "temp0 = 3\n"+
+             "y = temp0\n"+
+             "falseLabel1\n";//
+             "repeatLabel1\n"+
+             "temp0 = 3\n"+
+             "temp1 = 2\n"+
+             "IF_NQ: temp0, temp1, trueLabel2\n"+
+             "GOTO: falseLabel2\n"+
+             "trueLabel2\n"+
+             "temp0 = 4\n"+
+             "x = temp0\n"+
+             "GOTO: repeatLabel1\n"+
+             "falseLabel2\n";
     assert(parser.getThreeAddr(eval).equals(result));
 
     System.out.println("Congrats: Extra three address generation tests passed!");

@@ -7,79 +7,89 @@ public class EvalParser {
 
   int tempID = 0;
   String threeAddressResult = "";
+  ASTNode treeRoot = null;
 
   /***************** Three Address Translator ***********************/
   // TODO #2 Continued: Write the functions for E/E', T/T', and F. Return the temporary ID associated with each subexpression and
   //                    build the threeAddressResult string with your three address translation 
   /****************************************/
-  public int threeAddrE(LinkedList<Token> tokens) {
-    int leftID = threeAddrT(tokens); // Left tempID for operation three address generation
-    int currID = -1; 
+  public ASTNode threeAddrE(LinkedList<Token> tokens) {
+    ASTNode left = threeAddrT(tokens); // Left tempID for operation three address generation
+    ASTNode currNode = left; 
     while (true) {
       // Handle addition operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.PLUS){
-        String op = tokens.peek().tokenVal; // Retrieve operator
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("+");
+        op.setLeft(left);
         tokens.remove();
-        int rightID = threeAddrT(tokens);
-        operationThreeAddr(leftID, op, rightID);
-        currID = tempID;
-        leftID = currID;
+        ASTNode right = threeAddrT(tokens);
+        op.setRight(right);
+        op.setID(tempID);
         // Used to keep the original value intact for returns
         tempID++;
+        currNode = op;
+        left = currNode;
       }
       // Handle subtraction operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.MINUS) {
-        String op = tokens.peek().tokenVal;
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("-");
+        op.setLeft(left);
         tokens.remove();
-        int rightID = threeAddrT(tokens);
-        operationThreeAddr(leftID, op, rightID);
-        currID = tempID;
-        leftID = currID;
+        ASTNode right = threeAddrT(tokens);
+        op.setRight(right);
+        op.setID(tempID);
         tempID++;
+        currNode = op;
+        left = currNode;
       }
       else {
-        // Return the left value when coming from recursive calls
-        currID = tempID-1;
         break;
       }
     }
-    return currID;
+    return currNode;
   }
 
-  public int threeAddrT(LinkedList<Token> tokens) {
-    int leftID = threeAddrF(tokens);
-    int currID = -1;
+  public ASTNode threeAddrT(LinkedList<Token> tokens) {
+    ASTNode left = threeAddrF(tokens);
+    ASTNode currNode = left;
     while (true) {
       // Handle multiplication operations
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.MUL) {
-        String op = tokens.peek().tokenVal;
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("*");
+        op.setLeft(left);
         tokens.remove();
-        int rightID = threeAddrF(tokens);
-        operationThreeAddr(leftID, op, rightID);
-        currID = tempID;
-        leftID = currID;
+        ASTNode right = threeAddrF(tokens);
+        op.setRight(right);
+        op.setID(tempID);
         tempID++;
+        currNode = op;
+        left = currNode;
       }
       // Handle division operations
       else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.DIV) {
-        String op = tokens.peek().tokenVal;
+        ASTNode op = new ASTNode(ASTNode.NodeType.OP);
+        op.setVal("/");
+        op.setLeft(left);
         tokens.remove();
-        int rightID = threeAddrF(tokens);
-        operationThreeAddr(leftID, op, rightID);
-        currID = tempID;
-        leftID = currID;
+        ASTNode right = threeAddrF(tokens);
+        op.setRight(right);
+        op.setID(tempID);
         tempID++;
+        currNode = op;
+        left = currNode;
       }
       else {
-        currID = tempID-1;
         break;
       }
     }
-    return currID;
+    return currNode;
   }
 
-  public int threeAddrF(LinkedList<Token> tokens) {
-    int currID = -1;
+  public ASTNode threeAddrF(LinkedList<Token> tokens) {
+    ASTNode currNode = null;
     // Handle recursion into expressions contained in parentheses
     if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
       tokens.remove();
@@ -87,7 +97,7 @@ public class EvalParser {
         System.out.println("ERROR: Expression not supported by grammar");
         System.exit(1);
       }
-      currID = threeAddrE(tokens);
+      currNode = threeAddrE(tokens);
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CP) {
         tokens.remove();
       }
@@ -99,8 +109,9 @@ public class EvalParser {
     }
     // Handle numbers
     else if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.NUM) {
-      constantThreeAddr(tokens.peek().tokenVal);
-      currID = tempID;
+      currNode = new ASTNode(ASTNode.NodeType.NUM);
+      currNode.setVal("" + tokens.peek().tokenVal);
+      currNode.setID(tempID);
       this.tempID++;
       tokens.remove();
       if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OP) {
@@ -112,17 +123,11 @@ public class EvalParser {
       // If a factor has reached this point it is not an operation supported by this parser
       System.out.println("ERROR: Expression not supported by grammar");
       System.exit(1);
-    }
-    return currID;
-  }
-  
-  public void constantThreeAddr(String val) {
-    this.threeAddressResult += "temp" + this.tempID + " = " + val + "\n";
+    } 
+    
+    return currNode;
   }
 
-  public void operationThreeAddr(int val1, String op, int val2) {
-    this.threeAddressResult += "temp" + this.tempID + " = temp" + val1 + " " + op + " temp" + val2 + "\n";
-  }
   /***************** Simple Expression Evaluator ***********************/
   // TODO #1 Continued: Write the functions for E/E', T/T', and F. Return the expression's value
   /****************************************/
@@ -200,8 +205,25 @@ public class EvalParser {
     this.threeAddressResult = "";
     this.tempID = 0;
     LinkedList<Token> tokens = scan.extractTokenList(eval);
-    threeAddrE(tokens);
-    return this.threeAddressResult;
-  } 
+    
+    return postorder(threeAddrE(tokens), "");
+  }
+
+  private String postorder(ASTNode root, String str) {
+    if (root == null) {
+      return str;
+    }
+    
+    str = postorder(root.getLeft(), str);
+    str = postorder(root.getRight(), str);
+    if (root.getType() == ASTNode.NodeType.OP) {
+      str += "temp" + root.getID() + " = temp" + root.getLeft().getID() +
+             " " + root.getVal() + " temp" + root.getRight().getID() + "\n";
+    }
+    else {
+      str += "temp" + root.getID() + " = " + root.getVal() + "\n";
+    }
+    return str;
+  }
 
 }

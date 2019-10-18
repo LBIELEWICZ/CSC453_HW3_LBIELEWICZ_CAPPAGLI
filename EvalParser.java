@@ -44,25 +44,25 @@ public class EvalParser {
           }
           else {
             // Check brackets
-            System.out.println("ERROR: Check brackets");
+            System.out.println("ERROR1: Check brackets");
             System.exit(1);
           }
         }
         else {
           // Check brackets
-          System.out.println("ERROR: Check brackets");
+          System.out.println("ERROR2: Check brackets");
           System.exit(1);
         }
       }
       else {
         // Check brackets
-        System.out.println("ERROR: Check brackets");
+        System.out.println("ERROR3: Check brackets");
         System.exit(1);
       }
     }
     else {
       // Check brackets
-      System.out.println("ERROR: Check brackets");
+      System.out.println("ERROR4: Check brackets");
       System.exit(1);
     }
     return currNode;
@@ -140,14 +140,15 @@ public class EvalParser {
         
         tokens.remove();
         if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.OB) {
-          tokens.remove();
-          cf.setRight(threeAddrStmtLst(tokens));
-          cf.setID(cf.getLeft().getID());
-          
           if (whileFlag) {
 	    cf.setRID(this.rlabelID);
             this.rlabelID++;
           }
+
+          tokens.remove();
+          cf.setRight(threeAddrStmtLst(tokens));
+          cf.setID(cf.getLeft().getID());
+           
           currNode = cf;
           if (tokens.peek() != null && tokens.peek().tokenType == Token.TokenType.CB) {
             tokens.remove();
@@ -543,9 +544,35 @@ public class EvalParser {
   /* TODO #2: Now add three address translation to your parser*/
   public String getThreeAddr(String eval){
     this.tempID = 0;
+    
     LinkedList<Token> tokens = scan.extractTokenList(eval);
     
     return postorder(threeAddrProg(tokens), "");
+  }
+  
+  private String threeAddrRELOP(String op, ASTNode node, int labelID) {
+    String ret = "IF_" + op + ": ";
+    
+    if (node.getLeft().getType() == ASTNode.NodeType.OP || node.getLeft().getType() == ASTNode.NodeType.NUM)
+      ret += "temp" + node.getLeft().getID() + ", ";
+    else if (node.getLeft().getType() == ASTNode.NodeType.ID)
+      ret += node.getLeft().getVal() + ", ";
+    else {
+      System.out.println("ERROR: Type error in RELOP");
+      System.exit(1);
+    }
+    
+    if (node.getRight().getType() == ASTNode.NodeType.OP || node.getRight().getType() == ASTNode.NodeType.NUM)
+      ret += "temp" + node.getRight().getID() + ", ";
+    else if (node.getRight().getType() == ASTNode.NodeType.ID)
+      ret += node.getRight().getVal() + ", ";
+    else {
+      System.out.println("ERROR: Type error in RELOP");
+      System.exit(1);
+    }
+
+    ret += "trueLabel" + labelID + "\n";
+    return ret;
   }
 
   private String postorder(ASTNode root, String str) {
@@ -560,28 +587,22 @@ public class EvalParser {
     str = postorder(root.getLeft(), str);
     if (root.getType() == ASTNode.NodeType.IF || root.getType() == ASTNode.NodeType.WHILE) {
       if (root.getLeft().getVal().equals("<")) {
-        str += "IF_LT: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("LT", root.getLeft(), root.getID());
       }
       else if (root.getLeft().getVal().equals(">")) {
-        str += "IF_GT: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("GT", root.getLeft(), root.getID());
       }
       else if (root.getLeft().getVal().equals("<=")) {
-        str += "IF_LTE: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("LTE", root.getLeft(), root.getID());
       }
       else if (root.getLeft().getVal().equals(">=")) {
-        str += "IF_GTE: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("GTE", root.getLeft(), root.getID());
       }
       else if (root.getLeft().getVal().equals("==")) {
-        str += "IF_EQ: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("EQ", root.getLeft(), root.getID());
       }
       else if (root.getLeft().getVal().equals("!=")) {
-        str += "IF_NQ: temp" + root.getLeft().getLeft().getID() + ", temp" +
-               root.getLeft().getRight().getID() + ", trueLabel" + root.getID() + "\n";
+        str += threeAddrRELOP("NE", root.getLeft(), root.getID());
       }
       str += "GOTO: falseLabel" + root.getID() + "\n";
       str += "trueLabel" + root.getID() + "\n";
